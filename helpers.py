@@ -17,6 +17,7 @@ def amount_to_call(state: GameState) -> int:
     player_bet = state.bet_money[state.index_to_action]
     return current_bet - player_bet
 
+# return list of pots the current player is involved in
 def get_my_pots(state: GameState) -> list[Pot]:
     my_index = state.index_to_action
     my_pots = []
@@ -25,53 +26,27 @@ def get_my_pots(state: GameState) -> list[Pot]:
             my_pots.append(pot)
     return my_pots
 
-def pot_odds(state: GameState) -> float:
-    my_pots = get_my_pots(state)
-    total_pot = sum(pot.value for pot in my_pots)
-    to_call = amount_to_call(state)
-    if to_call == 0:
-        return float('inf')  # Infinite odds if no call is needed
-    return total_pot / to_call
+# return best hand category and best 5-card hand from given hole `hand` and `community` cards
+def get_best_hand_from(hand: list[str], community: list[str]) -> tuple[int, list[str]]:
+    """
+    Evaluate the best 5-card poker hand given a player's hole `hand` and the `community` cards.
 
-def required_equity_for_call(state: GameState) -> float:
-    to_call = amount_to_call(state)
-    my_pots = get_my_pots(state)
-    total_pot = sum(pot.value for pot in my_pots)
-    if total_pot + to_call == 0:
-        return 0.0
-    return to_call / (total_pot + to_call)
+    Args:
+        hand: list of 0..2 card strings (e.g. ['ah', 'kc'])
+        community: list of 0..5 community card strings
 
-def get_best_hand(cards: list[str]) -> tuple[int, list[str]]:
-    # Evaluate the best 5-card poker hand from the given cards (up to 7 cards).
-    # Returns a tuple (hand_strength:int, best_five_cards:list[str]) where
-    # higher hand_strength is a stronger hand. Strength mapping:
-    # 8: Straight Flush, 7: Four of a Kind, 6: Full House, 5: Flush,
-    # 4: Straight, 3: Three of a Kind, 2: Two Pair, 1: One Pair, 0: High Card
+    Returns:
+        tuple: (category:int, best_five_cards:list[str]) where category is
+               0=High Card .. 8=Straight Flush
+    """
+    if not isinstance(hand, list) or not isinstance(community, list):
+        raise TypeError("hand and community must be lists of card strings")
+    if len(hand) > 2:
+        raise ValueError("hand should contain at most 2 cards")
+
     from itertools import combinations
-
-    RANK_ORDER = {'2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9,
-                  't': 10, 'j': 11, 'q': 12, 'k': 13, 'a': 14}
-
-    HAND_NAMES = {
-        8: 'Straight Flush',
-        7: 'Four of a Kind',
-        6: 'Full House',
-        5: 'Flush',
-        4: 'Straight',
-        3: 'Three of a Kind',
-        2: 'Two Pair',
-        1: 'One Pair',
-        0: 'High Card'
-    }
-
-    def parse_card(card: str) -> tuple[int, str]:
-        if len(card) != 2:
-            raise ValueError(f"Invalid card string: {card}")
-        r = card[0].lower()
-        s = card[1].lower()
-        if r not in RANK_ORDER:
-            raise ValueError(f"Invalid rank: {r}")
-        return (RANK_ORDER[r], s)
+    # combine into the `cards` list used by the evaluator
+    cards = list(hand) + list(community)
 
     def is_straight(ranks: list[int]) -> int:
         # ranks is a sorted list of unique ranks descending
@@ -165,42 +140,23 @@ def get_best_hand(cards: list[str]) -> tuple[int, list[str]]:
     # Return numeric strength and the 5 cards that produce it
     return (best[0], list(best_five))
 
-
-def get_best_hand_from(hand: list[str], community: list[str]) -> tuple[int, list[str]]:
-    """
-    Evaluate the best 5-card poker hand given a player's hole `hand` and the `community` cards.
-
-    Args:
-        hand: list of 2 card strings (e.g. ['ah', 'kc'])
-        community: list of 3..5 community card strings
-
-    Returns:
-        tuple: same format as `get_best_hand`, e.g. (6, ['ah','as','ad','kh','kc'])
-    """
-    if not isinstance(hand, list) or not isinstance(community, list):
-        raise TypeError("hand and community must be lists of card strings")
-    if len(hand) != 2:
-        # allow len 0..2 for flexibility, but warn/raise for >2
-        if len(hand) > 2:
-            raise ValueError("hand should contain at most 2 cards")
-    # combine and delegate to get_best_hand
-    combined = list(hand) + list(community)
-    return get_best_hand(combined)
-
-
 def fold() -> int:
     return -1
 
+# return 0 to check
 def check() -> int:
     return 0
 
+# return amount needed to call current bet
 def call(state: GameState) -> int:
     return amount_to_call(state)
 
+# return all-in amount for current player
 def all_in(state: GameState) -> int:
     my_index = state.index_to_action
     return state.held_money[my_index]
 
+# return minimum legal raise amount for current player
 def min_raise(state: GameState) -> int:
     """
     Compute the minimum amount (chips) the current player must put in this action to make a legal
@@ -262,3 +218,71 @@ def is_valid_bet(state: GameState, amount: int) -> bool:
             if amount < min_raise_amount:
                 return False
         return True
+    
+# return current round name as string
+def get_round_name(state: GameState) -> str:
+    community_len = len(state.community_cards)
+    if community_len == 0:
+        return "Pre-Flop"
+    elif community_len == 3:
+        return "Flop"
+    elif community_len == 4:
+        return "Turn"
+    elif community_len == 5:
+        return "River"
+    else:
+        return "Unknown Round"
+
+# return your stack size
+def my_stack(state: GameState) -> int:
+    my_index = state.index_to_action
+    return state.held_money[my_index]
+
+# return dict of opponent index to their stack size
+def opp_stacks(state: GameState) -> dict[int, int]:
+    my_index = state.index_to_action
+    return {i: state.held_money[i] for i in range(len(state.players)) if i != my_index}
+
+# return list of legal actions for current player
+# legal actions are: fold(-1), check(0), call(amount_to_call), min_raise, all_in
+def legal_actions(state: GameState) -> list[int]:
+    actions = []
+    for amount in [-1, 0, amount_to_call(state), min_raise(state), all_in(state)]:
+        if is_valid_bet(state, amount) and amount not in actions:
+            actions.append(amount)
+    return actions
+
+# return total pot size from all pots
+def total_pot(state: GameState) -> int:
+    return sum(pot.value for pot in state.pots)
+
+# parse card string into (rank:int, suit:str)
+def parse_card(card: str) -> tuple[int, str]:
+    RANK_ORDER = {'2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9,
+                  't': 10, 'j': 11, 'q': 12, 'k': 13, 'a': 14}
+    if len(card) != 2:
+        raise ValueError(f"Invalid card string: {card}")
+    r = card[0].lower()
+    s = card[1].lower()
+    if r not in RANK_ORDER:
+        raise ValueError(f"Invalid rank: {r}")
+    return (RANK_ORDER[r], s)
+
+# return list of remaining cards in deck as (rank:int, suit:str)
+def deck_remaining(state: GameState) -> list[tuple[int, str]]:
+    all_ranks = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A']
+    all_suits = ['H', 'D', 'C', 'S']
+    full_deck = {f"{r}{s}" for r in all_ranks for s in all_suits}
+
+    dealt_cards = set()
+    # add player cards
+    for card in state.player_cards:
+        if card:
+            dealt_cards.add(card)
+    # add community cards
+    for card in state.community_cards:
+        if card:
+            dealt_cards.add(card)
+
+    remaining_cards = full_deck - dealt_cards
+    return [parse_card(card) for card in remaining_cards]
