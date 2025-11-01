@@ -17,7 +17,10 @@ class GameState:
     big_blind: int
 # </DO NOT MODIFY>
 
+class Memory:
+    pass
+
 # DO NOT MODIFY THE FUNCTION SIGNATURE
-def bet(state: GameState) -> int:
+def bet(state: GameState, memory: Memory | None=None) -> tuple[int, Memory | None]:
     bet_amount = 0
-    return bet_amount
+    return (bet_amount, memory)
