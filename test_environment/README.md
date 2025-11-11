@@ -3,10 +3,10 @@
 This directory contains a self-contained CLI for testing your poker bot by playing heads-up against it. 
 
 > **NOTE:** Some expected behavior does not work as intended (particularly when dealing with all-ins). Chip counts are also a little inaccurate in certain edge cases. I will try to fix these but for now, it should be enough to do most logic tests.
-> Memory is not implemented yet. I will have that up by Tuesday.
+> Memory should be up though I have not tested it thoroughly. Ping me for any issues.
 
 If you wish to modify or extend the testing environment, feel free to do so.
-If you have any questions or the environment doesn't behave as expected, please reach out to *don.trann* on the [ACM Discord](https://discord.gg/p6rcUUjWaU)!
+If you have any questions or the environment doesn't behave as expected, please reach out to *don.tran* on the [ACM Discord](https://discord.gg/p6rcUUjWaU)!
 
 ## Files
 
