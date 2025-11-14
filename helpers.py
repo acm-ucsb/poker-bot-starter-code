@@ -135,7 +135,7 @@ def get_best_hand_from(hand: list[str], community: list[str]) -> tuple[int, list
 
     # consider all 5-card combinations (cards may be 5..7 long)
     best = (-1, [])
-    best_five = None
+    best_five = []
     for combo in combinations(cards, 5):
         val = evaluate_five(list(combo))
         if val > best:
