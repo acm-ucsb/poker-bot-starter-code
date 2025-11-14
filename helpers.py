@@ -1,11 +1,19 @@
-from __future__ import annotations
+class Pot:
+    value: int
+    players: list[str]
 
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    # import types for annotations only to avoid a runtime circular import
-    from bot import GameState, Pot
-
+class GameState:
+    index_to_action: int
+    index_of_small_blind: int
+    players: list[str]
+    player_cards: list[str]
+    held_money: list[int]
+    bet_money: list[int]
+    community_cards: list[str]
+    pots: list[Pot]
+    small_blind: int
+    big_blind: int
 
 # returns list of players, index corresponds to player index in GameState
 def get_player_list(state: GameState) -> list[str]:
