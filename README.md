@@ -67,7 +67,7 @@ Interpreting the example:
 
 ## Code Specification & Libraries
 - Only Python 3.11 is allowed.
-- We only allow some standard Python libraries and numpy
+- We only allow some standard Python libraries. No external libraries allowed.
 - List of black listed standard libraries can be found [here](https://docs.google.com/document/d/1Q78tdVFAZIFt0ZWEgNG65nDDAlbt6rcG5o21waeZprA/edit?usp=sharing).
 
 
