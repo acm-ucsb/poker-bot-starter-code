@@ -3,10 +3,10 @@
 CLI for testing your poker bot by playing against it heads-up.
 
 Usage:
-    python bot_test.py <path_to_bot.py>
+    python test_environment/bot_test.py <path_to_bot.py> (running from project root)
 
 Example:
-    python bot_test.py random_bot.py
+    python test_environment/bot_test.py random_bot.py (move random_bot to project root first)
 """
 
 import sys

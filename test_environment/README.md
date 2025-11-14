@@ -18,7 +18,7 @@ If you have any questions or the environment doesn't behave as expected, please 
 ## Usage
 
 ```bash
-python bot_test.py <path_to_your_bot.py> [--stack CHIPS] [--sb SB] [--bb BB]
+python test_environment/bot_test.py <path_to_your_bot.py> [--stack CHIPS] [--sb SB] [--bb BB]
 ```
 
 ### Examples
